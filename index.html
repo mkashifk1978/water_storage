@@ -148,7 +148,7 @@
                 const rows = parseCSV(txt);
 
                 const lastUpdateValue = rows[1] ? rows[1][8] : 'N/A';
-                document.getElementById('lastUpdate').innerText = `Last update from I2: ${lastUpdateValue}`;
+                document.getElementById('lastUpdate').innerText = `Last update: ${lastUpdateValue}`;
 
                 const slice = rows.slice(1, 15);
                 const tbody = document.getElementById('machines');
@@ -193,4 +193,5 @@
 </body>
 
 </html>
+
 
