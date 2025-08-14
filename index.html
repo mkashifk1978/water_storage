@@ -86,7 +86,9 @@
         }
 
         @media (max-width: 600px) {
-            th, td {
+
+            th,
+            td {
                 padding: 10px 8px;
                 font-size: 0.9rem;
             }
@@ -100,7 +102,6 @@
 
 <body>
     <h1>Water Storage in a Glance.</h1>
-    <div class="timestamp" id="timestamp">Loading time...</div>
     <div class="timestamp" id="lastUpdate">Last update from I2: Loading...</div>
     <table>
         <thead>
@@ -130,10 +131,9 @@
 
     <script>
         const sheetID = '2PACX-1vRK7cNxV_XjxJP7g5B41E5M6ILDdstOx_U3xfYd3EcXY40n7DOsXKfa_4rccbavN4w84_ll7EUZCxKJ';
-        const sheet2_gid = '1919901995'; // Sheet2 gid
+        const sheet2_gid = '1919901995';
 
         const csvUrl = `https://docs.google.com/spreadsheets/d/e/${sheetID}/pub?gid=${sheet2_gid}&single=true&output=csv`;
-        const lastUpdateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/Sheet1!I2?key=YOUR_API_KEY`; // Replace with your API key
 
         function parseCSV(text) {
             return text.trim().split(/\r?\n/).map(line =>
@@ -147,8 +147,10 @@
                 const txt = await res.text();
                 const rows = parseCSV(txt);
 
-                // Skip header row (row 1)
-                const slice = rows.slice(1, 15); // A2–E15
+                const lastUpdateValue = rows[1] ? rows[1][8] : 'N/A';
+                document.getElementById('lastUpdate').innerText = `Last update from I2: ${lastUpdateValue}`;
+
+                const slice = rows.slice(1, 15);
                 const tbody = document.getElementById('machines');
                 tbody.innerHTML = '';
 
@@ -156,11 +158,11 @@
                 let totalAvailable = 0;
 
                 slice.forEach(r => {
-                    const name = r[0] || ''; // Column A (Machine Name)
-                    const waterLevel = r[1] || ''; // Column B
-                    const capacity = parseFloat(r[2].replace(/[^\d.-]/g, '')) || 0; // Column C
-                    const available = parseFloat(r[3].replace(/[^\d.-]/g, '')) || 0; // Column D
-                    const percent = r[4] || ''; // Column E
+                    const name = r[0] || '';
+                    const waterLevel = r[1] || '';
+                    const capacity = parseFloat(r[2].replace(/[^\d.-]/g, '')) || 0;
+                    const available = parseFloat(r[3].replace(/[^\d.-]/g, '')) || 0;
+                    const percent = r[4] || '';
 
                     totalCapacity += capacity;
                     totalAvailable += available;
@@ -176,39 +178,17 @@
                     tbody.appendChild(tr);
                 });
 
-                // Update totals in the footer
                 document.getElementById('totalCapacity').innerText = totalCapacity.toLocaleString('en-US');
                 document.getElementById('totalAvailable').innerText = totalAvailable.toLocaleString('en-US');
 
-                // Update the timestamp
-                updateTimestamp();
-                fetchLastUpdateTime();
             } catch (err) {
-                document.getElementById('machines').innerHTML = `<tr><td colspan="5">Error: ${err.message}</td></tr>`;
+                console.error(err);
+                document.getElementById('machines').innerHTML = `<tr><td colspan="5" style="color:red;">Error loading data: ${err.message}</td></tr>`;
             }
         }
 
-        function updateTimestamp() {
-            const now = new Date();
-            const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-            const formattedTime = now.toLocaleString('en-US', options);
-            document.getElementById('timestamp').innerText = `Last updated: ${formattedTime}`;
-        }
-
-        async function fetchLastUpdateTime() {
-            try {
-                const response = await fetch(lastUpdateUrl);
-                const data = await response.json();
-                const lastUpdateTime = data.values[0][0]; // Accessing the value in cell I2
-                document.getElementById('lastUpdate').innerText = `Last update from I2: ${lastUpdateTime}`;
-            } catch (error) {
-                document.getElementById('lastUpdate').innerText = `Error fetching last update: ${error.message}`;
-            }
-        }
-
-        // Load data initially and set interval for refreshing
         loadMachineData();
-        setInterval(loadMachineData, 10000); // Refresh every 10 seconds
+        setInterval(loadMachineData, 10000);
     </script>
 </body>
 
